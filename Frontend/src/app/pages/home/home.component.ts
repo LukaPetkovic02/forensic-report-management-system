@@ -1,4 +1,4 @@
-import { Component } from "@angular/core";
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from "@angular/core";
 import { AuthService } from "../../service/auth.service";
 import { Router } from '@angular/router';
 import { FormsModule } from "@angular/forms";
@@ -9,10 +9,11 @@ import { ReportService } from "../../service/report.service";
     selector: 'app-home',
     standalone: true,
     imports: [FormsModule, CommonModule],
-    templateUrl: './home.component.html'
+    templateUrl: './home.component.html',
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class HomeComponent{
-    constructor(private auth: AuthService, private router: Router, private reportService: ReportService) {}
+    constructor(private auth: AuthService, private router: Router, private reportService: ReportService, private cdr: ChangeDetectorRef) {}
     
     selectedFile: File | null = null;
     showForm = false;
@@ -41,11 +42,12 @@ export class HomeComponent{
           next: (dto) => {
             console.log("Received DTO:", dto);
 
-            Object.assign(this.formData, dto);
+            this.formData = { ...dto };
             this.showForm = true;
 
-            // 🔥 KLJUČNO
-            event.target.value = null;
+            this.cdr.markForCheck();
+
+            // event.target.value = null;
           },
           error: () => {
             alert("Greška prilikom parsiranja PDF-a");
