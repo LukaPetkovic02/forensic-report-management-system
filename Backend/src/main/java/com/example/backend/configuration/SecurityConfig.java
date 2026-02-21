@@ -1,60 +1,75 @@
 package com.example.backend.configuration;
 
+import com.example.backend.dto.ForensicReportDTO;
+import com.example.backend.security.JwtAuthenticationFilter;
+import com.example.backend.service.PdfParserService;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 @Configuration
-@RequiredArgsConstructor
-public class SecurityConfig {
+@EnableWebSecurity
+public class SecurityConfig implements WebMvcConfigurer {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtFilter) throws Exception{
         http
-                .cors(cors -> {})
+                .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
-                .authorizeHttpRequests(auth -> auth.requestMatchers("/login").permitAll()
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+                        })
+                )
+                .authorizeHttpRequests(auth ->
+                        auth.requestMatchers("/login","/api/reports/parse", "/api/me").permitAll()
                         .anyRequest().authenticated()
                 )
-                .formLogin(form -> form
-                        .loginProcessingUrl("/login")
-                        .successHandler((request, response, authntication) -> {
-                            response.setStatus(200);
-                        })
-                        .failureHandler((request, response, exception) -> {
-                            response.setStatus(401);
-                        })
+                .sessionManagement(sess ->
+                        sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-                .logout(logout -> logout
-                        .logoutUrl("/logout")
-                        .logoutSuccessHandler((request, response, authentication) -> {
-                            response.setStatus(200);
-                        })
-                        .invalidateHttpSession(true)
-                        .deleteCookies("JSESSIONID"));
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+
         //System.out.println("Security config " + new BCryptPasswordEncoder().encode("12345678"));
+        // PROVERA DAL RADI PARSIRANJE TEKSTA IZ PDFA
+//        try(PDDocument document = PDDocument.load(new File("src/main/resources/static/test.pdf"))){
+//            PDFTextStripper stripper = new PDFTextStripper();
+//            System.out.println(stripper.getText(document));
+//            ForensicReportDTO dto = new PdfParserService().parse(stripper.getText(document));
+//
+//            System.out.println("DTO:" + dto);
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
         return http.build();
     }
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:4200"));
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
-        configuration.setAllowedHeaders(List.of("*"));
-        configuration.setAllowCredentials(true);
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-        return source;
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+                .allowedOrigins("http://localhost:4200")
+                .allowedMethods("GET", "POST", "PUT", "DELETE")
+                .allowedHeaders("*")
+                .allowCredentials(true);
     }
 
 }

@@ -1,2 +1,37 @@
 <h2>Welcome!</h2>
 <button (click)="logout()">Logout</button>
+
+<div style="padding: 40px">
+
+  <h2>Upload forenzičkog izveštaja</h2>
+
+  <input type="file"
+         accept="application/pdf"
+         (change)="onFileSelected($event)" />
+
+  <div *ngIf="showForm" style="margin-top: 30px">
+
+    <h3>Podaci iz izveštaja</h3>
+
+    <form>
+      <input [(ngModel)]="formData.organizationName" name="organizationName" placeholder="Organizacija" /><br><br>
+      <input [(ngModel)]="formData.address" name="address" placeholder="Adresa" /><br><br>
+      <input [(ngModel)]="formData.email" name="email" placeholder="Email" /><br><br>
+      <input [(ngModel)]="formData.phone" name="phone" placeholder="Telefon" /><br><br>
+      <input [(ngModel)]="formData.fileName" name="fileName" placeholder="Naziv fajla" /><br><br>
+      <input [(ngModel)]="formData.classification" name="classification" placeholder="Klasifikacija" /><br><br>
+      <input [(ngModel)]="formData.hash" name="hash" placeholder="Hash" /><br><br>
+      <input [(ngModel)]="formData.threatName" name="threatName" placeholder="Naziv pretnje" /><br><br>
+      <textarea [(ngModel)]="formData.behaviorDescription"
+                name="behaviorDescription"
+                placeholder="Opis ponašanja"
+                rows="4"></textarea><br><br>
+      <input [(ngModel)]="formData.forensicExpert1" name="forensicExpert1" placeholder="Forenzičar 1" /><br><br>
+      <input [(ngModel)]="formData.forensicExpert2" name="forensicExpert2" placeholder="Forenzičar 2" /><br><br>
+
+      <button type="button" (click)="confirm()">Confirm</button>
+      <button type="button" (click)="cancel()">Cancel</button>
+    </form>
+
+  </div>
+</div>
