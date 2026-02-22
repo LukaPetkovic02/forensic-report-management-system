@@ -33,21 +33,18 @@ export class HomeComponent{
       forensicExpert2: ''
     };
 
-    searchData = {
-      expert: '',
-      hash: '',
-      classification: ''
-    };
+    searchQuery: string = '';
 
     searchResults: any[] = [];
     searchPerformed = false;
 
     searchReports() {
-      this.reportService.searchReports(
-        this.searchData.expert,
-        this.searchData.hash,
-        this.searchData.classification
-      ).subscribe({
+      if(!this.searchQuery.trim()){
+        return;
+      }
+
+      this.reportService.searchReports(this.searchQuery)
+      .subscribe({
         next: (results: any[]) => {
           this.searchResults = results;
           this.searchPerformed = true;

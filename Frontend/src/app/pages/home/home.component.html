@@ -62,14 +62,11 @@
 <h2>Search Forensic Reports</h2>
 
 <form (submit)="searchReports(); $event.preventDefault()">
-  <label>Forensic Expert:</label>
-  <input [(ngModel)]="searchData.expert" name="expert" placeholder="Name of expert" /><br><br>
-
-  <label>Hash value:</label>
-  <input [(ngModel)]="searchData.hash" name="hash" placeholder="Hash" /><br><br>
-
-  <label>Classification:</label>
-  <input [(ngModel)]="searchData.classification" name="classification" placeholder="Classification" /><br><br>
+  <label>Boolean query:</label><br>
+  <input [(ngModel)]="searchQuery"
+         name="searchQuery"
+         placeholder='Example: malver AND "remote execution" OR visoka'
+         style="width:400px;" /><br><br>
 
   <button type="submit">Search</button>
 </form>

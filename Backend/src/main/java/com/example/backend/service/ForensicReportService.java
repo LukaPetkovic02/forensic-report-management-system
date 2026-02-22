@@ -1,5 +1,11 @@
 package com.example.backend.service;
 
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import co.elastic.clients.elasticsearch.core.SearchRequest;
+import co.elastic.clients.elasticsearch.core.SearchResponse;
+import com.example.backend.configuration.QueryTokenizer;
 import com.example.backend.dto.ForensicReportDTO;
 import com.example.backend.model.ForensicReport;
 import com.example.backend.model.ForensicReportDocument;
@@ -22,6 +28,8 @@ public class ForensicReportService {
     private final MinioService minioService;
     private final ForensicReportRepository forensicReportRepository;
     private final ForensicReportElasticRepository elasticRepository;
+    private final ElasticsearchClient esClient;
+    private final BooleanQueryParser booleanQueryParser;
 
     public ForensicReport saveFromPdf(MultipartFile file, ForensicReportDTO dto){
         if(file == null || file.isEmpty()){
@@ -83,16 +91,63 @@ public class ForensicReportService {
         return doc;
     }
 
-    public List<ForensicReportDocument> searchReports(String expert, String hash, String classification) {
-        if(expert != null && !expert.isEmpty()) {
-            return elasticRepository.findByForensicExpert1OrForensicExpert2(expert, expert);
-        } else if(hash != null && !hash.isEmpty()) {
-            return elasticRepository.findByHash(hash).map(List::of).orElse(List.of());
-        } else if(classification != null && !classification.isEmpty()) {
-            return elasticRepository.findByClassification(classification);
-        } else {
-            return List.of();
+    public List<ForensicReportDocument> searchReports(String expert, String hash, String classification) throws IOException {
+        BoolQuery.Builder bool = new BoolQuery.Builder();
+
+        if(expert != null && !expert.isEmpty()){
+            bool.must(q -> q
+                    .bool(b -> b
+                            .should(s -> s.term(t -> t.field("forensicExpert1").value(expert)))
+                            .should(s -> s.term(t -> t.field("forensicExpert2").value(expert)))
+                    )
+            );
         }
+
+        if(hash != null && !hash.isEmpty()){
+            bool.must(q -> q.term(t -> t.field("hash").value(hash)));
+        }
+
+        if(classification != null && !classification.isEmpty()){
+            bool.must(q -> q.term(t -> t.field("classification").value(classification)));
+        }
+
+        SearchRequest request = new SearchRequest.Builder()
+                .index("forensic_reports")
+                .query(q -> q.bool(bool.build()))
+                .size(100)
+                .build();
+
+        SearchResponse<ForensicReportDocument> response = esClient.search(request, ForensicReportDocument.class);
+
+        return response.hits().hits().stream()
+                .map(hit -> hit.source())
+                .toList();
+    }
+
+    public List<ForensicReportDocument> search(String query) throws IOException {
+
+        Query parsedQuery = booleanQueryParser.parse(query);
+
+        SearchResponse<ForensicReportDocument> response =
+                esClient.search(s -> s
+                                .index("forensic_reports")
+                                .query(parsedQuery)
+                                .size(100),
+                        ForensicReportDocument.class
+                );
+
+        return response.hits()
+                .hits()
+                .stream()
+                .map(hit -> hit.source())
+                .toList();
+    }
+
+    private String cleanToken(String token) {
+        if (token.startsWith("\"") && token.endsWith("\"")) {
+            return token.substring(1, token.length() - 1);
+        }
+        return token;
     }
 
 }

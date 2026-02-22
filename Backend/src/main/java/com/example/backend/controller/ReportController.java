@@ -46,13 +46,26 @@ public class ReportController {
         return ResponseEntity.ok(saved);
     }
 
+//    @GetMapping("/search")
+//    public ResponseEntity<List<ForensicReportDocument>> searchReports(
+//            @RequestParam(required = false) String expert,
+//            @RequestParam(required = false) String hash,
+//            @RequestParam(required = false) String classification
+//    ){
+//        List<ForensicReportDocument> results = null;
+//        try {
+//            results = forensicReportService.searchReports(expert, hash, classification);
+//
+//        } catch (IOException e) {
+//            throw new RuntimeException(e);
+//        }
+//        return ResponseEntity.ok(results);
+//    }
+
     @GetMapping("/search")
-    public ResponseEntity<List<ForensicReportDocument>> searchReports(
-            @RequestParam(required = false) String expert,
-            @RequestParam(required = false) String hash,
-            @RequestParam(required = false) String classification
-    ){
-        List<ForensicReportDocument> results = forensicReportService.searchReports(expert, hash, classification);
-        return ResponseEntity.ok(results);
+    public List<ForensicReportDocument> search(@RequestParam String query) throws IOException {
+        return forensicReportService.search(query);
     }
+
+
 }
