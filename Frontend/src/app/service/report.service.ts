@@ -17,4 +17,12 @@ export class ReportService {
 
     return this.http.post(`${this.apiUrl}/parse`, formData);
   }
+
+  saveReport(file: File, dto: any): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('dto', new Blob([JSON.stringify(dto)], {type: 'application/json'}));
+
+    return this.http.post(`${this.apiUrl}/upload`, formData);
+  }
 }

@@ -3,7 +3,7 @@
 
 <div style="padding: 40px">
 
-  <h2>Upload forenzičkog izveštaja</h2>
+  <h2>Upload forensic report</h2>
 
   <input type="file"
          accept="application/pdf"
@@ -14,19 +14,40 @@
     <h3>Forensic report data</h3>
 
     <form>
+      <label>Organization name:</label><br>
       <input [(ngModel)]="formData.organizationName" name="organizationName" placeholder="Organization name" /><br><br>
+
+      <label>Address:</label><br>
       <input [(ngModel)]="formData.address" name="address" placeholder="Address" /><br><br>
+
+      <label>Email:</label><br>
       <input [(ngModel)]="formData.email" name="email" placeholder="Email" /><br><br>
+
+      <label>Phone number:</label><br>
       <input [(ngModel)]="formData.phone" name="phone" placeholder="Phone number" /><br><br>
+
+      <label>File name:</label><br>
       <input [(ngModel)]="formData.fileName" name="fileName" placeholder="File name" /><br><br>
+
+      <label>Classification:</label><br>
       <input [(ngModel)]="formData.classification" name="classification" placeholder="Classification" /><br><br>
+
+      <label>Hash value:</label><br>
       <input [(ngModel)]="formData.hash" name="hash" placeholder="Hash value" /><br><br>
+
+      <label>Threat name:</label><br>
       <input [(ngModel)]="formData.threatName" name="threatName" placeholder="Threat name" /><br><br>
+      
+      <label>Behavior description:</label><br>
       <textarea [(ngModel)]="formData.behaviorDescription"
                 name="behaviorDescription"
                 placeholder="Behavior description"
                 rows="4"></textarea><br><br>
+
+      <label>Forensic expert 1:</label><br>
       <input [(ngModel)]="formData.forensicExpert1" name="forensicExpert1" placeholder="Forensic expert 1" /><br><br>
+
+      <label>Forensic expert 2:</label><br>
       <input [(ngModel)]="formData.forensicExpert2" name="forensicExpert2" placeholder="Forensic expert 2" /><br><br>
 
       <button type="button" (click)="confirm()">Confirm</button>

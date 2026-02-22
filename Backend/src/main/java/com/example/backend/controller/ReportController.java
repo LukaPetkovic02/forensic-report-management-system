@@ -8,10 +8,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -41,9 +38,9 @@ public class ReportController {
 
     @PostMapping("/upload")
     public ResponseEntity<ForensicReport> uploadReport(
-            @RequestParam("file") MultipartFile file) {
+            @RequestParam("file") MultipartFile file, @RequestPart("dto") ForensicReportDTO dto) {
 
-        ForensicReport saved = forensicReportService.saveFromPdf(file);
+        ForensicReport saved = forensicReportService.saveFromPdf(file, dto);
         return ResponseEntity.ok(saved);
     }
 }

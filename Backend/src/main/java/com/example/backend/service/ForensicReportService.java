@@ -16,9 +16,10 @@ import java.io.InputStream;
 @RequiredArgsConstructor
 public class ForensicReportService {
     private final PdfParserService pdfParserService;
+    private final MinioService minioService;
     private final ForensicReportRepository forensicReportRepository;
 
-    public ForensicReport saveFromPdf(MultipartFile file){
+    public ForensicReport saveFromPdf(MultipartFile file, ForensicReportDTO dto){
         if(file == null || file.isEmpty()){
             throw new IllegalArgumentException("File is empty");
         }
@@ -27,23 +28,12 @@ public class ForensicReportService {
             throw new IllegalArgumentException("File is not a PDF");
         }
 
-        try(InputStream inputStream = file.getInputStream();
-            PDDocument document = PDDocument.load(inputStream)){
+        String objectName = minioService.uploadFile(file);
 
-            PDFTextStripper stripper = new PDFTextStripper();
-            String text = stripper.getText(document);
+        ForensicReport entity = mapToEntity(dto);
+        entity.setFilePath(objectName);
 
-            ForensicReportDTO dto = pdfParserService.parse(text);
-
-            // validateParsedReport(dto);
-
-            ForensicReport entity = mapToEntity(dto);
-
-            return forensicReportRepository.save(entity);
-
-        }catch (IOException e){
-            throw new RuntimeException(e);
-        }
+        return forensicReportRepository.save(entity);
     }
 
     private ForensicReport mapToEntity(ForensicReportDTO dto) {

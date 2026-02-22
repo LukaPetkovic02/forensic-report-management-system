@@ -58,10 +58,24 @@ export class HomeComponent{
     }
 
     confirm() {
-      console.log("Confirmed:", this.formData);
-      // Ovde će kasnije ići poziv backendu
-      alert("Izveštaj potvrđen!");
-      this.reset();
+      if(!this.selectedFile){
+        alert("No file selected!");
+        return;
+      }
+
+      this.reportService.saveReport(this.selectedFile, this.formData)
+      .subscribe({
+        next: (response) => {
+          console.log("Saved report:", response);
+          alert("Report saved successfully!");
+          this.reset();
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          console.error(err);
+          alert("Error saving report!");
+        }
+      });
     }
 
     cancel() {
@@ -84,6 +98,7 @@ export class HomeComponent{
         forensicExpert1: '',
         forensicExpert2: ''
       };
+      this.cdr.markForCheck();
     }
   logout() {
     this.auth.logout();

@@ -32,4 +32,6 @@ public class ForensicReport {
 
     private String forensicExpert1;
     private String forensicExpert2;
+
+    private String filePath;
 }
