@@ -25,4 +25,13 @@ export class ReportService {
 
     return this.http.post(`${this.apiUrl}/upload`, formData);
   }
+
+  searchReports(expert: string, hash: string, classification: string): Observable<any[]> {
+    const params: any = {};
+    if (expert) params.expert = expert;
+    if (hash) params.hash = hash;
+    if (classification) params.classification = classification;
+
+    return this.http.get<any[]>(`${this.apiUrl}/search`, { params });
+  }
 }

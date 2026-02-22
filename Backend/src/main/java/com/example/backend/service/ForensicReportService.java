@@ -2,6 +2,8 @@ package com.example.backend.service;
 
 import com.example.backend.dto.ForensicReportDTO;
 import com.example.backend.model.ForensicReport;
+import com.example.backend.model.ForensicReportDocument;
+import com.example.backend.repository.ForensicReportElasticRepository;
 import com.example.backend.repository.ForensicReportRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -11,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -18,6 +21,7 @@ public class ForensicReportService {
     private final PdfParserService pdfParserService;
     private final MinioService minioService;
     private final ForensicReportRepository forensicReportRepository;
+    private final ForensicReportElasticRepository elasticRepository;
 
     public ForensicReport saveFromPdf(MultipartFile file, ForensicReportDTO dto){
         if(file == null || file.isEmpty()){
@@ -33,7 +37,14 @@ public class ForensicReportService {
         ForensicReport entity = mapToEntity(dto);
         entity.setFilePath(objectName);
 
-        return forensicReportRepository.save(entity);
+        ForensicReport saved = forensicReportRepository.save(entity);
+
+        ForensicReportDocument doc = mapToDocument(saved);
+        doc.setId(saved.getId().toString());
+
+        elasticRepository.save(doc);
+
+        return saved;
     }
 
     private ForensicReport mapToEntity(ForensicReportDTO dto) {
@@ -57,18 +68,31 @@ public class ForensicReportService {
         return report;
     }
 
-//    private void validateParsedReport(ForensicReportDTO dto) {
-//
-//        if (dto.getOrganizationName() == null)
-//            throw new IllegalArgumentException("Organizacija nije parsirana.");
-//
-//        if (dto.getHash() == null)
-//            throw new IllegalArgumentException("Hash nije parsiran.");
-//
-//        if (dto.getClassification() == null)
-//            throw new IllegalArgumentException("Klasifikacija nije parsirana.");
-//
-//        if (dto.getForensicExpert1() == null)
-//            throw new IllegalArgumentException("Forenzičar nije parsiran.");
-//    }
+    private ForensicReportDocument mapToDocument(ForensicReport entity){
+        ForensicReportDocument doc = new ForensicReportDocument();
+
+        doc.setHash(entity.getHash());
+        doc.setClassification(entity.getClassification());
+        doc.setOrganizationName(entity.getOrganizationName());
+        doc.setBehaviorDescription(entity.getBehaviorDescription());
+        doc.setThreatName(entity.getThreatName());
+
+        doc.setForensicExpert1(entity.getForensicExpert1());
+        doc.setForensicExpert2(entity.getForensicExpert2());
+
+        return doc;
+    }
+
+    public List<ForensicReportDocument> searchReports(String expert, String hash, String classification) {
+        if(expert != null && !expert.isEmpty()) {
+            return elasticRepository.findByForensicExpert1OrForensicExpert2(expert, expert);
+        } else if(hash != null && !hash.isEmpty()) {
+            return elasticRepository.findByHash(hash).map(List::of).orElse(List.of());
+        } else if(classification != null && !classification.isEmpty()) {
+            return elasticRepository.findByClassification(classification);
+        } else {
+            return List.of();
+        }
+    }
+
 }

@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { FormsModule } from "@angular/forms";
 import { CommonModule } from "@angular/common";
 import { ReportService } from "../../service/report.service";
+import { hash } from "node:crypto";
 
 @Component({
     selector: 'app-home',
@@ -31,6 +32,34 @@ export class HomeComponent{
       forensicExpert1: '',
       forensicExpert2: ''
     };
+
+    searchData = {
+      expert: '',
+      hash: '',
+      classification: ''
+    };
+
+    searchResults: any[] = [];
+    searchPerformed = false;
+
+    searchReports() {
+      this.reportService.searchReports(
+        this.searchData.expert,
+        this.searchData.hash,
+        this.searchData.classification
+      ).subscribe({
+        next: (results: any[]) => {
+          this.searchResults = results;
+          this.searchPerformed = true;
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          console.error(err);
+          alert("Error during search!");
+          this.searchPerformed = true;
+        }
+      });
+    }
 
     onFileSelected(event: any) {
       const file = event.target.files[0];

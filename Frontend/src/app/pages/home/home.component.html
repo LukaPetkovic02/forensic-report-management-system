@@ -37,7 +37,7 @@
 
       <label>Threat name:</label><br>
       <input [(ngModel)]="formData.threatName" name="threatName" placeholder="Threat name" /><br><br>
-      
+
       <label>Behavior description:</label><br>
       <textarea [(ngModel)]="formData.behaviorDescription"
                 name="behaviorDescription"
@@ -55,4 +55,49 @@
     </form>
 
   </div>
+</div>
+
+<hr style="margin:40px 0;">
+
+<h2>Search Forensic Reports</h2>
+
+<form (submit)="searchReports(); $event.preventDefault()">
+  <label>Forensic Expert:</label>
+  <input [(ngModel)]="searchData.expert" name="expert" placeholder="Name of expert" /><br><br>
+
+  <label>Hash value:</label>
+  <input [(ngModel)]="searchData.hash" name="hash" placeholder="Hash" /><br><br>
+
+  <label>Classification:</label>
+  <input [(ngModel)]="searchData.classification" name="classification" placeholder="Classification" /><br><br>
+
+  <button type="submit">Search</button>
+</form>
+
+<div *ngIf="searchResults.length > 0" style="margin-top: 30px;">
+  <h3>Search Results</h3>
+  <table cellpadding="5" cellspacing="0">
+    <tr>
+      <th>Organization</th>
+      <th>Hash</th>
+      <th>Classification</th>
+      <th>Threat Name</th>
+      <th>Behavior</th>
+      <th>Expert 1</th>
+      <th>Expert 2</th>
+    </tr>
+    <tr *ngFor="let report of searchResults">
+      <td>{{report.organizationName}}</td>
+      <td>{{report.hash}}</td>
+      <td>{{report.classification}}</td>
+      <td>{{report.threatName}}</td>
+      <td>{{report.behaviorDescription}}</td>
+      <td>{{report.forensicExpert1}}</td>
+      <td>{{report.forensicExpert2}}</td>
+    </tr>
+  </table>
+</div>
+
+<div *ngIf="searchResults.length === 0 && searchPerformed" style="margin-top: 30px;">
+  <p>No reports found.</p>
 </div>

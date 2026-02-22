@@ -43,6 +43,7 @@ public class SecurityConfig implements WebMvcConfigurer {
                 .authorizeHttpRequests(auth ->
                         auth.requestMatchers("/login","/api/reports/parse",
                                         "/api/reports/upload",
+                                        "/api/reports/search",
                                         "/api/me").permitAll()
                         .anyRequest().authenticated()
                 )
