@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -25,46 +26,67 @@ public class BooleanQueryParser {
     public Query parse(String input) {
 
         List<String> tokens = tokenize(input);
+        List<String> postfix = toPostfix(tokens);
 
-        BoolQuery.Builder bool = new BoolQuery.Builder();
+        Stack<Query> stack = new Stack<>();
 
-        String currentOperator = "AND"; // default
-
-        for (String token : tokens) {
+        for (String token : postfix) {
 
             if (token.equalsIgnoreCase("AND")) {
-                currentOperator = "AND";
-                continue;
-            }
 
-            if (token.equalsIgnoreCase("OR")) {
-                currentOperator = "OR";
-                continue;
-            }
+                Query right = stack.pop();
+                Query left = stack.pop();
 
-            Query fieldQuery = buildFieldQuery(token);
+                stack.push(Query.of(q -> q.bool(b -> b
+                        .must(left)
+                        .must(right)
+                )));
 
-            if (currentOperator.equals("AND")) {
-                bool.must(fieldQuery);
+            } else if (token.equalsIgnoreCase("OR")) {
+
+                Query right = stack.pop();
+                Query left = stack.pop();
+
+                stack.push(Query.of(q -> q.bool(b -> b
+                        .should(left)
+                        .should(right)
+                        .minimumShouldMatch("1")
+                )));
+
+            } else if (token.equalsIgnoreCase("NOT")) {
+
+                Query operand = stack.pop();
+
+                stack.push(Query.of(q -> q.bool(b -> b
+                        .mustNot(operand)
+                )));
+
             } else {
-                bool.should(fieldQuery);
+                stack.push(buildFieldQuery(token));
             }
         }
 
-        return Query.of(q -> q.bool(bool.build()));
+        return stack.pop();
     }
 
     private List<String> tokenize(String input) {
 
         List<String> tokens = new ArrayList<>();
-        Matcher matcher = Pattern.compile("\"([^\"]*)\"|(\\S+)").matcher(input);
+
+        Pattern pattern = Pattern.compile(
+                "\"[^\"]+\"" +          // fraza
+                        "|\\bAND\\b" +
+                        "|\\bOR\\b" +
+                        "|\\bNOT\\b" +
+                        "|\\(" +
+                        "|\\)" +
+                        "|[^\\s()]+"
+        );
+
+        Matcher matcher = pattern.matcher(input);
 
         while (matcher.find()) {
-            if (matcher.group(1) != null) {
-                tokens.add("\"" + matcher.group(1) + "\"");
-            } else {
-                tokens.add(matcher.group(2));
-            }
+            tokens.add(matcher.group());
         }
 
         return tokens;
@@ -76,17 +98,84 @@ public class BooleanQueryParser {
 
         String cleaned = token.replaceAll("^\"|\"$", "");
 
+        BoolQuery.Builder bool = new BoolQuery.Builder();
+
         if (isPhrase) {
             return Query.of(q -> q.multiMatch(mm -> mm
                     .query(cleaned)
                     .fields(List.of(SEARCH_FIELDS))
                     .type(TextQueryType.Phrase)
             ));
+        } else {
+            bool.should(Query.of(q -> q.multiMatch(mm -> mm
+                    .query(cleaned)
+                    .fields(List.of(SEARCH_FIELDS))
+            )));
         }
 
-        return Query.of(q -> q.multiMatch(mm -> mm
-                .query(cleaned)
-                .fields(List.of(SEARCH_FIELDS))
-        ));
+        // KEYWORD fields (exact match)
+        bool.should(Query.of(q -> q.term(t -> t
+                .field("classification")
+                .value(cleaned)
+        )));
+
+        bool.should(Query.of(q -> q.term(t -> t
+                .field("hash")
+                .value(cleaned)
+        )));
+
+        return Query.of(q -> q.bool(bool.build()));
+    }
+
+    private List<String> toPostfix(List<String> tokens) {
+
+        List<String> output = new ArrayList<>();
+        Stack<String> operators = new Stack<>();
+
+        for (String token : tokens) {
+
+            if (token.equalsIgnoreCase("AND") ||
+                    token.equalsIgnoreCase("OR") ||
+                    token.equalsIgnoreCase("NOT")) {
+
+                while (!operators.isEmpty()
+                        && !operators.peek().equals("(")
+                        && precedence(operators.peek()) >= precedence(token)) {
+
+                    output.add(operators.pop());
+                }
+
+                operators.push(token);
+
+            } else if (token.equals("(")) {
+                operators.push(token);
+
+            } else if (token.equals(")")) {
+
+                while (!operators.isEmpty() && !operators.peek().equals("(")) {
+                    output.add(operators.pop());
+                }
+
+                operators.pop(); // ukloni "("
+
+            } else {
+                output.add(token);
+            }
+        }
+
+        while (!operators.isEmpty()) {
+            output.add(operators.pop());
+        }
+
+        return output;
+    }
+
+    private int precedence(String operator) {
+        return switch (operator.toUpperCase()) {
+            case "NOT" -> 3;
+            case "AND" -> 2;
+            case "OR" -> 1;
+            default -> 0;
+        };
     }
 }
