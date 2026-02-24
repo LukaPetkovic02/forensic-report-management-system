@@ -104,28 +104,20 @@
 
 <hr style="margin:40px 0;">
 
-<div *ngIf="searchResults.length > 0" style="margin-top: 30px;">
-  <h3>Search Results</h3>
-  <table cellpadding="5" cellspacing="0">
-    <tr>
-      <th>Organization</th>
-      <th>Hash</th>
-      <th>Classification</th>
-      <th>Threat Name</th>
-      <th>Behavior</th>
-      <th>Expert 1</th>
-      <th>Expert 2</th>
-    </tr>
-    <tr *ngFor="let report of searchResults">
-      <td>{{report.organizationName}}</td>
-      <td>{{report.hash}}</td>
-      <td>{{report.classification}}</td>
-      <td>{{report.threatName}}</td>
-      <td>{{report.behaviorDescription}}</td>
-      <td>{{report.forensicExpert1}}</td>
-      <td>{{report.forensicExpert2}}</td>
-    </tr>
-  </table>
+<div *ngFor="let r of searchResults" class="result-card">
+
+  <h3>{{ r.organizationName }}</h3>
+
+  <p><strong>Threat:</strong> {{ r.threatName }}</p>
+  <p><strong>Classification:</strong> {{ r.classification }}</p>
+  <p *ngIf="r.forensicExpert1"><strong>Forensic expert 1:</strong> {{ r.forensicExpert1 }}</p>
+  <p *ngIf="r.forensicExpert2"><strong>Forensic expert 2:</strong> {{ r.forensicExpert2 }}</p>
+
+  <div [innerHTML]="r.snippet ? r.snippet : (r.behaviorDescription ? r.behaviorDescription : '')"></div>
+
+  <!-- Optional: score -->
+  <small *ngIf="r.score !== undefined">Score: {{ r.score | number:'1.2-2' }}</small>
+
 </div>
 
 <div *ngIf="searchResults.length === 0 && searchPerformed" style="margin-top: 30px;">

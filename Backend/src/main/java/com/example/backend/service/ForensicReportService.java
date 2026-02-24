@@ -7,8 +7,11 @@ import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
+import co.elastic.clients.elasticsearch.core.search.HighlightField;
+import co.elastic.clients.util.NamedValue;
 import com.example.backend.configuration.QueryTokenizer;
 import com.example.backend.dto.ForensicReportDTO;
+import com.example.backend.dto.SearchResultDTO;
 import com.example.backend.model.ForensicReport;
 import com.example.backend.model.ForensicReportDocument;
 import com.example.backend.repository.ForensicReportElasticRepository;
@@ -28,6 +31,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -118,7 +122,7 @@ public class ForensicReportService {
         return doc;
     }
 
-    public List<ForensicReportDocument> searchBasic(String input) throws IOException {
+    public List<ForensicReportDocument> searchBasic(String input) throws IOException { // by forensics, classification, hash
 
         SearchResponse<ForensicReportDocument> response =
                 esClient.search(s -> s
@@ -152,7 +156,7 @@ public class ForensicReportService {
                 .toList();
     }
 
-    public List<ForensicReportDocument> searchOrganizationThreat(String input) throws IOException {
+    public List<SearchResultDTO> searchOrganizationThreatWithHighlight(String input) throws IOException {
 
         SearchResponse<ForensicReportDocument> response =
                 esClient.search(s -> s
@@ -168,34 +172,45 @@ public class ForensicReportService {
                                         ))
                                         .minimumShouldMatch("1")
                                 ))
-                                .size(100),
+                                .highlight(h -> h
+                                        .preTags("<mark>")
+                                        .postTags("</mark>")
+                                        .fields(NamedValue.of("organizationName", HighlightField.of(f -> f)),
+                                                NamedValue.of("threatName", HighlightField.of(f -> f)))
+                                )
+                                .size(20),
                         ForensicReportDocument.class
                 );
 
-        return response.hits()
-                .hits()
-                .stream()
-                .map(hit -> hit.source())
-                .toList();
+        return buildDTOResponse(response);
     }
 
-    public List<ForensicReportDocument> searchBehaviorDescription(String input) throws IOException {
+    public List<SearchResultDTO> searchBehaviorDescription(String input) throws IOException {
         SearchResponse<ForensicReportDocument> response =
                 esClient.search(s -> s
                                 .index("forensic_reports")
-                                .query(q -> q.match(m -> m
-                                        .field("behaviorDescription")
+                                .query(q -> q.multiMatch(mm -> mm
                                         .query(input)
+                                        .fields(
+                                                "behaviorDescription"
+                                                //"threatName",
+                                                //"organizationName",
+                                                //"forensicExpert1",
+                                                //"forensicExpert2"
+                                        )
                                 ))
-                                .size(100),
+                                .highlight(h -> h
+                                        .preTags("<mark>")
+                                        .postTags("</mark>")
+                                        .fields(
+                                                NamedValue.of("behaviorDescription", HighlightField.of(f -> f))
+                                        )
+                                )
+                                .size(20),
                         ForensicReportDocument.class
                 );
 
-        return response.hits()
-                .hits()
-                .stream()
-                .map(hit -> hit.source())
-                .toList();
+        return buildDTOResponse(response);
     }
 
     public List<ForensicReportDocument> knnSearch(String input)
@@ -230,7 +245,7 @@ public class ForensicReportService {
 
 
 
-    public List<ForensicReportDocument> search(String query) throws IOException {
+    public List<SearchResultDTO> searchWithHighlight(String query) throws IOException {
 
         Query parsedQuery = booleanQueryParser.parse(query);
 
@@ -238,15 +253,72 @@ public class ForensicReportService {
                 esClient.search(s -> s
                                 .index("forensic_reports")
                                 .query(parsedQuery)
-                                .size(100),
+                                .highlight(h -> h
+                                        .preTags("<mark>")
+                                        .postTags("</mark>")
+                                        .fields(
+                                                NamedValue.of("behaviorDescription", HighlightField.of(f -> f)),
+                                                NamedValue.of("threatName", HighlightField.of(f -> f)),
+                                                NamedValue.of("organizationName",HighlightField.of(f -> f))
+                                        )
+                                )
+                                .size(20),
                         ForensicReportDocument.class
                 );
 
-        return response.hits()
-                .hits()
-                .stream()
-                .map(hit -> hit.source())
-                .toList();
+        return buildDTOResponse(response);
+    }
+
+    private String shorten(String text, int maxLength) {
+        if (text == null) return null;
+        if (text.length() <= maxLength) return text;
+        return text.substring(0, maxLength) + "...";
+    }
+
+    private List<SearchResultDTO> buildDTOResponse(
+            SearchResponse<ForensicReportDocument> response) {
+
+        List<SearchResultDTO> results = new ArrayList<>();
+
+        response.hits().hits().forEach(hit -> {
+
+            ForensicReportDocument source = hit.source();
+            String snippet = null;
+
+            if (hit.highlight() != null) {
+
+                if (hit.highlight().containsKey("behaviorDescription")) {
+                    snippet = String.join(" ... ",
+                            hit.highlight().get("behaviorDescription"));
+
+                } else if (hit.highlight().containsKey("threatName")) {
+                    snippet = String.join(" ... ",
+                            hit.highlight().get("threatName"));
+
+                } else if (hit.highlight().containsKey("organizationName")) {
+                    snippet = String.join(" ... ",
+                            hit.highlight().get("organizationName"));
+                }
+            }
+
+            if (snippet == null && source.getBehaviorDescription() != null) {
+                snippet = shorten(source.getBehaviorDescription(), 200);
+            }
+
+            results.add(
+                    SearchResultDTO.builder()
+                            .id(source.getId())
+                            .organizationName(source.getOrganizationName())
+                            .threatName(source.getThreatName())
+                            .classification(source.getClassification())
+                            .hash(source.getHash())
+                            .snippet(snippet)
+                            .score(hit.score() != null ? hit.score().floatValue() : 0f)
+                            .build()
+            );
+        });
+
+        return results;
     }
 
 }

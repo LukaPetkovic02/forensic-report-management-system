@@ -2,6 +2,7 @@ package com.example.backend.controller;
 
 import ai.djl.translate.TranslateException;
 import com.example.backend.dto.ForensicReportDTO;
+import com.example.backend.dto.SearchResultDTO;
 import com.example.backend.model.ForensicReport;
 import com.example.backend.model.ForensicReportDocument;
 import com.example.backend.service.ForensicReportService;
@@ -47,24 +48,24 @@ public class ReportController {
         return ResponseEntity.ok(saved);
     }
 
-    @GetMapping("/search-basic")
+    @GetMapping("/search-basic") // forenzicar/hash/klasifikacija
     public List<ForensicReportDocument> searchBasic(@RequestParam String input) throws IOException {
         return forensicReportService.searchBasic(input);
     }
 
     @GetMapping("/search-org-threat")
-    public List<ForensicReportDocument> searchOrganizationThreat(@RequestParam String input) throws IOException {
-        return forensicReportService.searchOrganizationThreat(input);
+    public List<SearchResultDTO> searchOrganizationThreat(@RequestParam String input) throws IOException {
+        return forensicReportService.searchOrganizationThreatWithHighlight(input);
     }
 
     @GetMapping("/search/behavior")
-    public List<ForensicReportDocument> searchBehavior(@RequestParam String input) throws IOException {
+    public List<SearchResultDTO> searchBehavior(@RequestParam String input) throws IOException {
         return forensicReportService.searchBehaviorDescription(input);
     }
 
     @GetMapping("/search")
-    public List<ForensicReportDocument> search(@RequestParam String query) throws IOException {
-        return forensicReportService.search(query);
+    public List<SearchResultDTO> search(@RequestParam String query) throws IOException {
+        return forensicReportService.searchWithHighlight(query);
     }
 
     @GetMapping("/search/knn")
