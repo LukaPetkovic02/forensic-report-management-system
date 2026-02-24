@@ -2,6 +2,7 @@ package com.example.backend.controller;
 
 import ai.djl.translate.TranslateException;
 import com.example.backend.dto.ForensicReportDTO;
+import com.example.backend.dto.PageResponse;
 import com.example.backend.dto.SearchResultDTO;
 import com.example.backend.model.ForensicReport;
 import com.example.backend.model.ForensicReportDocument;
@@ -49,27 +50,37 @@ public class ReportController {
     }
 
     @GetMapping("/search-basic") // forenzicar/hash/klasifikacija
-    public List<ForensicReportDocument> searchBasic(@RequestParam String input) throws IOException {
-        return forensicReportService.searchBasic(input);
+    public PageResponse<ForensicReportDocument> searchBasic(@RequestParam String input,
+                                                            @RequestParam(defaultValue = "0") int page,
+                                                            @RequestParam(defaultValue = "10") int size) throws IOException {
+        return forensicReportService.searchBasic(input, page, size);
     }
 
     @GetMapping("/search-org-threat")
-    public List<SearchResultDTO> searchOrganizationThreat(@RequestParam String input) throws IOException {
-        return forensicReportService.searchOrganizationThreatWithHighlight(input);
+    public PageResponse<SearchResultDTO> searchOrganizationThreat(@RequestParam String input,
+                                                          @RequestParam(defaultValue = "0") int page,
+                                                          @RequestParam(defaultValue = "10") int size) throws IOException {
+        return forensicReportService.searchOrganizationThreatWithHighlight(input, page, size);
     }
 
     @GetMapping("/search/behavior")
-    public List<SearchResultDTO> searchBehavior(@RequestParam String input) throws IOException {
-        return forensicReportService.searchBehaviorDescription(input);
+    public PageResponse<SearchResultDTO> searchBehavior(@RequestParam String input,
+                                                @RequestParam(defaultValue = "0") int page,
+                                                @RequestParam(defaultValue = "10") int size) throws IOException {
+        return forensicReportService.searchBehaviorDescription(input, page, size);
     }
 
     @GetMapping("/search")
-    public List<SearchResultDTO> search(@RequestParam String query) throws IOException {
-        return forensicReportService.searchWithHighlight(query);
+    public PageResponse<SearchResultDTO> search(@RequestParam String query,
+                                        @RequestParam(defaultValue = "0") int page,
+                                        @RequestParam(defaultValue = "10") int size) throws IOException {
+        return forensicReportService.searchWithHighlight(query, page, size);
     }
 
     @GetMapping("/search/knn")
-    public List<ForensicReportDocument> searchKnn(@RequestParam String input) throws IOException, TranslateException {
-        return forensicReportService.knnSearch(input);
+    public PageResponse<ForensicReportDocument> searchKnn(@RequestParam String input,
+                                                          @RequestParam(defaultValue = "0") int page,
+                                                          @RequestParam(defaultValue = "10") int size) throws IOException, TranslateException {
+        return forensicReportService.knnSearch(input, page, size);
     }
 }

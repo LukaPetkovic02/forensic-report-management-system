@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { PageResponse } from '../models/page-response';
 
 @Injectable({
   providedIn: 'root'
@@ -26,31 +27,46 @@ export class ReportService {
     return this.http.post(`${this.apiUrl}/upload`, formData);
   }
 
-  searchReports(query: string): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/search`, {
-      params: { query }
-    });
+  searchReports(query: string, page: number, size: number): Observable<PageResponse<any>> {
+    return this.http.get<PageResponse<any>>(
+      `${this.apiUrl}/search`,
+      {params: {query, page, size}}
+    )
   }
 
-  searchBasic(input: string): Observable<any[]> {
-    return this.http.get<any[]>(
+  searchBasic(input: string, page: number, size: number)
+    : Observable<PageResponse<any>> {
+
+    return this.http.get<PageResponse<any>>(
       `${this.apiUrl}/search-basic`,
-      { params: { input } }
+      { params: { input, page, size } }
     );
   }
 
-  searchOrganizationThreat(input: string): Observable<any[]> {
-    return this.http.get<any[]>(
+  searchOrganizationThreat(input: string, page: number, size: number)
+    : Observable<PageResponse<any>> {
+
+    return this.http.get<PageResponse<any>>(
       `${this.apiUrl}/search-org-threat`,
-      { params: { input } }
+      { params: { input, page, size } }
     );
   }
 
-  searchBehaviorDescription(input: string): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/search/behavior`, { params: { input } });
+  searchBehaviorDescription(input: string, page: number, size: number)
+    : Observable<PageResponse<any>> {
+
+    return this.http.get<PageResponse<any>>(
+      `${this.apiUrl}/search/behavior`,
+      { params: { input, page, size } }
+    );
   }
 
-  searchKnn(input: string): Observable<any[]> {
-    return this.http.get<any[]>(`${this.apiUrl}/search/knn`, { params: { input } });
+  searchKnn(input: string, page: number, size: number)
+    : Observable<PageResponse<any>> {
+
+    return this.http.get<PageResponse<any>>(
+      `${this.apiUrl}/search/knn`,
+      { params: { input, page, size } }
+    );
   }
 }

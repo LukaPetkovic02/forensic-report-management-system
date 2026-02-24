@@ -2,15 +2,12 @@ package com.example.backend.service;
 
 import ai.djl.translate.TranslateException;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch._types.KnnQuery;
-import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
-import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.HighlightField;
 import co.elastic.clients.util.NamedValue;
-import com.example.backend.configuration.QueryTokenizer;
 import com.example.backend.dto.ForensicReportDTO;
+import com.example.backend.dto.PageResponse;
 import com.example.backend.dto.SearchResultDTO;
 import com.example.backend.model.ForensicReport;
 import com.example.backend.model.ForensicReportDocument;
@@ -19,20 +16,12 @@ import com.example.backend.repository.ForensicReportRepository;
 import com.example.backend.util.VectorizationUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.text.PDFTextStripper;
-import org.springframework.data.elasticsearch.client.elc.NativeQuery;
-import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -122,11 +111,15 @@ public class ForensicReportService {
         return doc;
     }
 
-    public List<ForensicReportDocument> searchBasic(String input) throws IOException { // by forensics, classification, hash
+    public PageResponse<ForensicReportDocument> searchBasic(String input, int page, int size) throws IOException { // by forensics, classification, hash
+
+        int from = page * size;
 
         SearchResponse<ForensicReportDocument> response =
                 esClient.search(s -> s
                                 .index("forensic_reports")
+                                .from(from)
+                                .size(size)
                                 .query(q -> q.bool(b -> b
                                         .should(sh -> sh.multiMatch(mm -> mm
                                                 .query(input)
@@ -144,23 +137,44 @@ public class ForensicReportService {
                                                 .value(input)
                                         ))
                                         .minimumShouldMatch("1")
-                                ))
-                                .size(100),
+                                )),
                         ForensicReportDocument.class
                 );
 
-        return response.hits()
-                .hits()
-                .stream()
-                .map(hit -> hit.source())
-                .toList();
+        return getForensicReportDocumentPageResponse(page, size, response);
     }
 
-    public List<SearchResultDTO> searchOrganizationThreatWithHighlight(String input) throws IOException {
+    private PageResponse<ForensicReportDocument> getForensicReportDocumentPageResponse(int page, int size, SearchResponse<ForensicReportDocument> response) {
+        List<ForensicReportDocument> content =
+                response.hits()
+                        .hits()
+                        .stream()
+                        .map(hit -> hit.source())
+                        .toList();
 
+        long totalElements = response.hits().total() != null
+                ? response.hits().total().value()
+                : content.size();
+
+        int totalPages = (int) Math.ceil((double) totalElements / size);
+
+        return PageResponse.<ForensicReportDocument>builder()
+                .content(content)
+                .totalElements(totalElements)
+                .totalPages(totalPages)
+                .page(page)
+                .size(size)
+                .build();
+    }
+
+    public PageResponse<SearchResultDTO> searchOrganizationThreatWithHighlight(String input, int page, int size) throws IOException {
+
+        int from = page * size;
         SearchResponse<ForensicReportDocument> response =
                 esClient.search(s -> s
                                 .index("forensic_reports")
+                                .from(from)
+                                .size(size)
                                 .query(q -> q.bool(b -> b
                                         .should(sh -> sh.match(m -> m
                                                 .field("organizationName")
@@ -177,18 +191,39 @@ public class ForensicReportService {
                                         .postTags("</mark>")
                                         .fields(NamedValue.of("organizationName", HighlightField.of(f -> f)),
                                                 NamedValue.of("threatName", HighlightField.of(f -> f)))
-                                )
-                                .size(20),
+                                ),
                         ForensicReportDocument.class
                 );
 
-        return buildDTOResponse(response);
+        return getSearchResultDTOPageResponse(page, size, response);
     }
 
-    public List<SearchResultDTO> searchBehaviorDescription(String input) throws IOException {
+    private PageResponse<SearchResultDTO> getSearchResultDTOPageResponse(int page, int size, SearchResponse<ForensicReportDocument> response) {
+        List<SearchResultDTO> content = buildDTOResponse(response);
+
+        long totalElements = response.hits().total() != null
+                ? response.hits().total().value()
+                : content.size();
+
+        int totalPages = (int) Math.ceil((double) totalElements / size);
+
+        return PageResponse.<SearchResultDTO>builder()
+                .content(content)
+                .totalElements(totalElements)
+                .totalPages(totalPages)
+                .page(page)
+                .size(size)
+                .build();
+    }
+
+    public PageResponse<SearchResultDTO> searchBehaviorDescription(String input, int page, int size) throws IOException {
+        int from = page * size;
+
         SearchResponse<ForensicReportDocument> response =
                 esClient.search(s -> s
                                 .index("forensic_reports")
+                                .from(from)
+                                .size(size)
                                 .query(q -> q.multiMatch(mm -> mm
                                         .query(input)
                                         .fields(
@@ -205,15 +240,14 @@ public class ForensicReportService {
                                         .fields(
                                                 NamedValue.of("behaviorDescription", HighlightField.of(f -> f))
                                         )
-                                )
-                                .size(20),
+                                ),
                         ForensicReportDocument.class
                 );
 
-        return buildDTOResponse(response);
+        return getSearchResultDTOPageResponse(page, size, response);
     }
 
-    public List<ForensicReportDocument> knnSearch(String input)
+    public PageResponse<ForensicReportDocument> knnSearch(String input, int page, int size)
             throws IOException, TranslateException {
 
         float[] embedding = VectorizationUtil.getEmbedding(input);
@@ -223,35 +257,38 @@ public class ForensicReportService {
             floatList.add(v);
         }
 
+        int from = page * size;
+
         SearchResponse<ForensicReportDocument> response =
                 esClient.search(s -> s
                                 .index("forensic_reports")
+                                .from(from)
+                                .size(size)
                                 .knn(k -> k
                                         .field("embedding")
                                         .queryVector(floatList)
-                                        .k(10)
-                                        .numCandidates(100)
-                                )
-                                .size(5),
+                                        .k(100)
+                                        .numCandidates(200)
+                                ),
                         ForensicReportDocument.class
                 );
 
-        return response.hits()
-                .hits()
-                .stream()
-                .map(hit -> hit.source())
-                .toList();
+        return getForensicReportDocumentPageResponse(page, size, response);
     }
 
 
 
-    public List<SearchResultDTO> searchWithHighlight(String query) throws IOException {
+    public PageResponse<SearchResultDTO> searchWithHighlight(String query, int page, int size) throws IOException {
 
         Query parsedQuery = booleanQueryParser.parse(query);
+
+        int from = page * size;
 
         SearchResponse<ForensicReportDocument> response =
                 esClient.search(s -> s
                                 .index("forensic_reports")
+                                .from(from)
+                                .size(size)
                                 .query(parsedQuery)
                                 .highlight(h -> h
                                         .preTags("<mark>")
@@ -261,12 +298,11 @@ public class ForensicReportService {
                                                 NamedValue.of("threatName", HighlightField.of(f -> f)),
                                                 NamedValue.of("organizationName",HighlightField.of(f -> f))
                                         )
-                                )
-                                .size(20),
+                                ),
                         ForensicReportDocument.class
                 );
 
-        return buildDTOResponse(response);
+        return getSearchResultDTOPageResponse(page, size, response);
     }
 
     private String shorten(String text, int maxLength) {

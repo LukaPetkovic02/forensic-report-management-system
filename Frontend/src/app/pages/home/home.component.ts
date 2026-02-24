@@ -33,6 +33,14 @@ export class HomeComponent{
       forensicExpert2: ''
     };
 
+    activeSearchType: 'basic' | 'boolean' | 'org' | 'behavior' | 'knn' | null = null;
+
+    currentPage = 0;
+    pageSize = 10;
+
+    totalPages = 0;
+    totalElements = 0;
+
     searchQuery: string = '';
 
     searchResults: any[] = [];
@@ -40,28 +48,44 @@ export class HomeComponent{
 
     basicSearchInput: string = '';
 
-    basicSearch() {
-      this.reportService.searchBasic(this.basicSearchInput)
-        .subscribe({
-          next: (results) => {
-            this.searchResults = results;
-            this.searchPerformed = true;
-            this.cdr.markForCheck();
-          },
-          error: (err) => {
-            console.error(err);
-            alert("Error during basic search!");
-          }
-        });
+    basicSearch(page: number = 0) {
+
+      this.activeSearchType = 'basic';
+      this.currentPage = page;
+
+      this.reportService
+      .searchBasic(this.basicSearchInput, this.currentPage, this.pageSize)
+      .subscribe({
+        next: (response) => {
+
+          this.searchResults = response.content;
+          this.totalPages = response.totalPages;
+          this.totalElements = response.totalElements;
+
+          this.searchPerformed = true;
+          this.cdr.markForCheck();
+        },
+        error: (err) => {
+          console.error(err);
+          alert("Error during basic search!");
+        }
+      });
     }
 
     orgThreatInput: string = '';
 
-    searchOrgThreat() {
-      this.reportService.searchOrganizationThreat(this.orgThreatInput)
+    searchOrgThreat(page: number = 0) {
+
+      this.activeSearchType = 'org';
+      this.currentPage = page;
+
+      this.reportService.searchOrganizationThreat(this.orgThreatInput, this.currentPage, this.pageSize)
         .subscribe({
-          next: (results) => {
-            this.searchResults = results;
+          next: (response) => {
+            this.searchResults = response.content;
+            this.totalPages = response.totalPages;
+            this.totalElements = response.totalElements;
+
             this.searchPerformed = true;
             this.cdr.markForCheck();
           },
@@ -74,11 +98,18 @@ export class HomeComponent{
 
     behaviorInput: string = '';
 
-    searchBehavior() {
-      this.reportService.searchBehaviorDescription(this.behaviorInput)
+    searchBehavior(page: number = 0) {
+
+      this.activeSearchType = 'behavior';
+      this.currentPage = page;
+
+      this.reportService.searchBehaviorDescription(this.behaviorInput, this.currentPage, this.pageSize)
         .subscribe({
-          next: (results) => {
-            this.searchResults = results;
+          next: (response) => {
+            this.searchResults = response.content;
+            this.totalPages = response.totalPages;
+            this.totalElements = response.totalElements;
+
             this.searchPerformed = true;
             this.cdr.markForCheck();
           },
@@ -91,11 +122,18 @@ export class HomeComponent{
 
     knnInput: string = '';
 
-    searchKnn() {
-      this.reportService.searchKnn(this.knnInput)
+    searchKnn(page: number = 0) {
+
+      this.activeSearchType = 'knn';
+      this.currentPage = page;
+      
+      this.reportService.searchKnn(this.knnInput, this.currentPage, this.pageSize)
         .subscribe({
-          next: (results) => {
-            this.searchResults = results;
+          next: (response) => {
+            this.searchResults = response.content;
+            this.totalPages = response.totalPages;
+            this.totalElements = response.totalElements;
+
             this.searchPerformed = true;
             this.cdr.markForCheck();
           },
@@ -106,15 +144,21 @@ export class HomeComponent{
         });
     }
 
-    searchReports() {
+    searchReports(page: number = 0) {
       if(!this.searchQuery.trim()){
         return;
       }
 
-      this.reportService.searchReports(this.searchQuery)
+      this.activeSearchType = 'boolean';
+      this.currentPage = page;
+
+      this.reportService.searchReports(this.searchQuery, this.currentPage, this.pageSize)
       .subscribe({
-        next: (results: any[]) => {
-          this.searchResults = results;
+        next: (response) => {
+          this.searchResults = response.content;
+          this.totalPages = response.totalPages;
+          this.totalElements = response.totalElements;
+          
           this.searchPerformed = true;
           this.cdr.markForCheck();
         },
@@ -125,6 +169,33 @@ export class HomeComponent{
         }
       });
     }
+
+    changePage(page: number) {
+
+    if (page < 0 || page >= this.totalPages) return;
+
+    switch (this.activeSearchType) {
+      case 'basic':
+        this.basicSearch(page);
+        break;
+
+      case 'boolean':
+        this.searchReports(page);
+        break;
+
+      case 'org':
+        this.searchOrgThreat(page);
+        break;
+
+      case 'behavior':
+        this.searchBehavior(page);
+        break;
+
+      case 'knn':
+        this.searchKnn(page);
+        break;
+    }
+  }
 
     onFileSelected(event: any) {
       const file = event.target.files[0];
