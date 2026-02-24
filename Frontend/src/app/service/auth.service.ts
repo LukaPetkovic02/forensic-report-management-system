@@ -25,7 +25,10 @@ export class AuthService {
     }
 
     public getToken(): string {
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
         return localStorage.getItem("token") || '';
+    }
+    return '';
     }
 
     public logout() {
