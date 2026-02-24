@@ -20,7 +20,7 @@ public class ForensicReportDocument {
     @Id
     private String id;
 
-    @Field(type = FieldType.Keyword, analyzer = "serbian_custom")
+    @Field(type = FieldType.Text, analyzer = "serbian_custom")
     private String organizationName;
 
     @Field(type = FieldType.Keyword)
@@ -48,6 +48,6 @@ public class ForensicReportDocument {
     @GeoPointField
     private GeoPoint location;
 
-    @Field(type = FieldType.Dense_Vector, dims = 384)
+    @Field(type = FieldType.Dense_Vector, dims = 384, similarity = "cosine")
     private float[] embedding;
 }

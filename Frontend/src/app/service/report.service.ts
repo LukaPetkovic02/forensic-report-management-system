@@ -31,4 +31,26 @@ export class ReportService {
       params: { query }
     });
   }
+
+  searchBasic(input: string): Observable<any[]> {
+    return this.http.get<any[]>(
+      `${this.apiUrl}/search-basic`,
+      { params: { input } }
+    );
+  }
+
+  searchOrganizationThreat(input: string): Observable<any[]> {
+    return this.http.get<any[]>(
+      `${this.apiUrl}/search-org-threat`,
+      { params: { input } }
+    );
+  }
+
+  searchBehaviorDescription(input: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/search/behavior`, { params: { input } });
+  }
+
+  searchKnn(input: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/search/knn`, { params: { input } });
+  }
 }

@@ -60,8 +60,7 @@
 <hr style="margin:40px 0;">
 
 <h2>Search Forensic Reports</h2>
-
-<form (submit)="searchReports(); $event.preventDefault()">
+<form (ngSubmit)="searchReports()">
   <label>Boolean query:</label><br>
   <input [(ngModel)]="searchQuery"
          name="searchQuery"
@@ -70,6 +69,40 @@
 
   <button type="submit">Search</button>
 </form>
+
+<h2>Search by Forensic expert / Hash / Classification</h2>
+
+<form (ngSubmit)="basicSearch()">
+  <input [(ngModel)]="basicSearchInput"
+         name="basicSearchInput"
+         placeholder="Enter expert, hash or classification" />
+
+  <button type="submit">Search</button>
+</form>
+
+<h2>Search by Organization or Threat</h2>
+
+<form (ngSubmit)="searchOrgThreat()">
+  <input [(ngModel)]="orgThreatInput"
+         name="orgThreatInput"
+         placeholder="Enter organization or threat name" />
+
+  <button type="submit">Search</button>
+</form>
+
+<h2>Search by Report Description</h2>
+<form (ngSubmit)="searchBehavior()">
+  <input [(ngModel)]="behaviorInput" name="behaviorInput" placeholder="Enter behavior description" />
+  <button type="submit">Search</button>
+</form>
+
+<h2>KNN Search</h2>
+<form (ngSubmit)="searchKnn()">
+  <input [(ngModel)]="knnInput" name="knnInput" placeholder="Search by KNN" />
+  <button type="submit">Search</button>
+</form>
+
+<hr style="margin:40px 0;">
 
 <div *ngIf="searchResults.length > 0" style="margin-top: 30px;">
   <h3>Search Results</h3>

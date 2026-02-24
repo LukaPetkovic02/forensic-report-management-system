@@ -11,7 +11,7 @@ import { hash } from "node:crypto";
     standalone: true,
     imports: [FormsModule, CommonModule],
     templateUrl: './home.component.html',
-    changeDetection: ChangeDetectionStrategy.OnPush,
+    changeDetection: ChangeDetectionStrategy.Default//.OnPush,
 })
 export class HomeComponent{
     constructor(private auth: AuthService, private router: Router, private reportService: ReportService, private cdr: ChangeDetectorRef) {}
@@ -37,6 +37,74 @@ export class HomeComponent{
 
     searchResults: any[] = [];
     searchPerformed = false;
+
+    basicSearchInput: string = '';
+
+    basicSearch() {
+      this.reportService.searchBasic(this.basicSearchInput)
+        .subscribe({
+          next: (results) => {
+            this.searchResults = results;
+            this.searchPerformed = true;
+            this.cdr.markForCheck();
+          },
+          error: (err) => {
+            console.error(err);
+            alert("Error during basic search!");
+          }
+        });
+    }
+
+    orgThreatInput: string = '';
+
+    searchOrgThreat() {
+      this.reportService.searchOrganizationThreat(this.orgThreatInput)
+        .subscribe({
+          next: (results) => {
+            this.searchResults = results;
+            this.searchPerformed = true;
+            this.cdr.markForCheck();
+          },
+          error: (err) => {
+            console.error(err);
+            alert("Error during org/threat search!");
+          }
+        });
+    }
+
+    behaviorInput: string = '';
+
+    searchBehavior() {
+      this.reportService.searchBehaviorDescription(this.behaviorInput)
+        .subscribe({
+          next: (results) => {
+            this.searchResults = results;
+            this.searchPerformed = true;
+            this.cdr.markForCheck();
+          },
+          error: (err) => {
+            console.error(err);
+            alert("Error during behavior description search!");
+          }
+        });
+    }
+
+    knnInput: string = '';
+
+    searchKnn() {
+      this.reportService.searchKnn(this.knnInput)
+        .subscribe({
+          next: (results) => {
+            this.searchResults = results;
+            this.searchPerformed = true;
+            this.cdr.markForCheck();
+          },
+          error: (err) => {
+            console.error(err);
+            alert("Error during KNN search!");
+          }
+        });
+    }
 
     searchReports() {
       if(!this.searchQuery.trim()){

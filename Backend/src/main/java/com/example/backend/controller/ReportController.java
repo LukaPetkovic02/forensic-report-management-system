@@ -1,5 +1,6 @@
 package com.example.backend.controller;
 
+import ai.djl.translate.TranslateException;
 import com.example.backend.dto.ForensicReportDTO;
 import com.example.backend.model.ForensicReport;
 import com.example.backend.model.ForensicReportDocument;
@@ -46,26 +47,28 @@ public class ReportController {
         return ResponseEntity.ok(saved);
     }
 
-//    @GetMapping("/search")
-//    public ResponseEntity<List<ForensicReportDocument>> searchReports(
-//            @RequestParam(required = false) String expert,
-//            @RequestParam(required = false) String hash,
-//            @RequestParam(required = false) String classification
-//    ){
-//        List<ForensicReportDocument> results = null;
-//        try {
-//            results = forensicReportService.searchReports(expert, hash, classification);
-//
-//        } catch (IOException e) {
-//            throw new RuntimeException(e);
-//        }
-//        return ResponseEntity.ok(results);
-//    }
+    @GetMapping("/search-basic")
+    public List<ForensicReportDocument> searchBasic(@RequestParam String input) throws IOException {
+        return forensicReportService.searchBasic(input);
+    }
+
+    @GetMapping("/search-org-threat")
+    public List<ForensicReportDocument> searchOrganizationThreat(@RequestParam String input) throws IOException {
+        return forensicReportService.searchOrganizationThreat(input);
+    }
+
+    @GetMapping("/search/behavior")
+    public List<ForensicReportDocument> searchBehavior(@RequestParam String input) throws IOException {
+        return forensicReportService.searchBehaviorDescription(input);
+    }
 
     @GetMapping("/search")
     public List<ForensicReportDocument> search(@RequestParam String query) throws IOException {
         return forensicReportService.search(query);
     }
 
-
+    @GetMapping("/search/knn")
+    public List<ForensicReportDocument> searchKnn(@RequestParam String input) throws IOException, TranslateException {
+        return forensicReportService.knnSearch(input);
+    }
 }
