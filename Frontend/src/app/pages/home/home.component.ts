@@ -4,13 +4,17 @@ import { Router } from '@angular/router';
 import { FormsModule } from "@angular/forms";
 import { CommonModule } from "@angular/common";
 import { ReportService } from "../../service/report.service";
-import { hash } from "node:crypto";
+import { MatInputModule } from "@angular/material/input";
+import { MatButtonModule } from "@angular/material/button";
+import { MatFormFieldModule } from "@angular/material/form-field";
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
     selector: 'app-home',
     standalone: true,
-    imports: [FormsModule, CommonModule],
+    imports: [FormsModule, CommonModule, MatInputModule, MatButtonModule, MatFormFieldModule, MatIconModule],
     templateUrl: './home.component.html',
+    styleUrl: './home.component.css',
     changeDetection: ChangeDetectionStrategy.Default//.OnPush,
 })
 export class HomeComponent{

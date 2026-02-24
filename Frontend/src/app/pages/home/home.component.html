@@ -1,145 +1,228 @@
-<h2>Welcome!</h2>
-<button (click)="logout()">Logout</button>
+<div class="page-container">
 
-<div style="padding: 40px">
-
-  <h2>Upload forensic report</h2>
-
-  <input type="file"
-         accept="application/pdf"
-         (change)="onFileSelected($event)" />
-
-  <div *ngIf="showForm" style="margin-top: 30px">
-
-    <h3>Forensic report data</h3>
-
-    <form>
-      <label>Organization name:</label><br>
-      <input [(ngModel)]="formData.organizationName" name="organizationName" placeholder="Organization name" /><br><br>
-
-      <label>Address:</label><br>
-      <input [(ngModel)]="formData.address" name="address" placeholder="Address" /><br><br>
-
-      <label>Email:</label><br>
-      <input [(ngModel)]="formData.email" name="email" placeholder="Email" /><br><br>
-
-      <label>Phone number:</label><br>
-      <input [(ngModel)]="formData.phone" name="phone" placeholder="Phone number" /><br><br>
-
-      <label>File name:</label><br>
-      <input [(ngModel)]="formData.fileName" name="fileName" placeholder="File name" /><br><br>
-
-      <label>Classification:</label><br>
-      <input [(ngModel)]="formData.classification" name="classification" placeholder="Classification" /><br><br>
-
-      <label>Hash value:</label><br>
-      <input [(ngModel)]="formData.hash" name="hash" placeholder="Hash value" /><br><br>
-
-      <label>Threat name:</label><br>
-      <input [(ngModel)]="formData.threatName" name="threatName" placeholder="Threat name" /><br><br>
-
-      <label>Behavior description:</label><br>
-      <textarea [(ngModel)]="formData.behaviorDescription"
-                name="behaviorDescription"
-                placeholder="Behavior description"
-                rows="4"></textarea><br><br>
-
-      <label>Forensic expert 1:</label><br>
-      <input [(ngModel)]="formData.forensicExpert1" name="forensicExpert1" placeholder="Forensic expert 1" /><br><br>
-
-      <label>Forensic expert 2:</label><br>
-      <input [(ngModel)]="formData.forensicExpert2" name="forensicExpert2" placeholder="Forensic expert 2" /><br><br>
-
-      <button type="button" (click)="confirm()">Confirm</button>
-      <button type="button" (click)="cancel()">Cancel</button>
-    </form>
-
+  <div class="top-bar">
+    <h2>Forensic Report System</h2>
+    <button mat-raised-button color="warn" (click)="logout()">
+      Logout
+    </button>
   </div>
-</div>
 
-<hr style="margin:40px 0;">
+  <!-- UPLOAD SECTION -->
+  <div class="card">
+    <h3>Upload forensic report</h3>
 
-<h2>Search Forensic Reports</h2>
-<form (ngSubmit)="searchReports()">
-  <label>Boolean query:</label><br>
-  <input [(ngModel)]="searchQuery"
-         name="searchQuery"
-         placeholder='Example: malver AND "remote execution" OR visoka'
-         style="width:400px;" /><br><br>
+    <input
+      #fileInput
+      type="file"
+      accept="application/pdf"
+      (change)="onFileSelected($event)"
+      hidden
+    />
 
-  <button type="submit">Search</button>
-</form>
+    <button
+      mat-raised-button
+      color="primary"
+      (click)="fileInput.click()">
+      <mat-icon>upload</mat-icon>
+      Upload PDF
+    </button>
 
-<h2>Search by Forensic expert / Hash / Classification</h2>
+    <span *ngIf="selectedFile" class="file-name">
+      {{ selectedFile.name }}
+    </span>
 
-<form (ngSubmit)="basicSearch()">
-  <input [(ngModel)]="basicSearchInput"
-         name="basicSearchInput"
-         placeholder="Enter expert, hash or classification" />
+    <div *ngIf="showForm" class="form-section">
 
-  <button type="submit">Search</button>
-</form>
+      <h4>Report data</h4>
 
-<h2>Search by Organization or Threat</h2>
+      <form class="grid-form">
 
-<form (ngSubmit)="searchOrgThreat()">
-  <input [(ngModel)]="orgThreatInput"
-         name="orgThreatInput"
-         placeholder="Enter organization or threat name" />
+        <mat-form-field appearance="fill" class="full-width">
+          <mat-label>Organization name</mat-label>
+          <input matInput [(ngModel)]="formData.organizationName"
+                name="organizationName">
+        </mat-form-field>
 
-  <button type="submit">Search</button>
-</form>
+        <mat-form-field appearance="fill" class="full-width">
+          <mat-label>Address</mat-label>
+          <input matInput [(ngModel)]="formData.address"
+                 name="address">
+        </mat-form-field>
 
-<h2>Search by Report Description</h2>
-<form (ngSubmit)="searchBehavior()">
-  <input [(ngModel)]="behaviorInput" name="behaviorInput" placeholder="Enter behavior description" />
-  <button type="submit">Search</button>
-</form>
+        <mat-form-field appearance="fill" class="full-width">
+          <mat-label>Email</mat-label>
+          <input matInput [(ngModel)]="formData.email"
+                name="email">
+        </mat-form-field>
 
-<h2>KNN Search</h2>
-<form (ngSubmit)="searchKnn()">
-  <input [(ngModel)]="knnInput" name="knnInput" placeholder="Search by KNN" />
-  <button type="submit">Search</button>
-</form>
+        <mat-form-field appearance="fill" class="full-width">
+          <mat-label>Phone number</mat-label>
+          <input matInput [(ngModel)]="formData.phone"
+                name="phone">
+        </mat-form-field>
 
-<hr style="margin:40px 0;">
+        <mat-form-field appearance="fill" class="full-width">
+          <mat-label>File name</mat-label>
+          <input matInput [(ngModel)]="formData.fileName"
+                name="fileName">
+        </mat-form-field>
 
-<div *ngFor="let r of searchResults" class="result-card">
+        <mat-form-field appearance="fill" class="full-width">
+          <mat-label>Classification</mat-label>
+          <input matInput [(ngModel)]="formData.classification"
+                name="classification">
+        </mat-form-field>
 
-  <h3>{{ r.organizationName }}</h3>
+        <mat-form-field appearance="fill" class="full-width">
+          <mat-label>Hash value</mat-label>
+          <input matInput [(ngModel)]="formData.hash"
+                name="hash">
+        </mat-form-field>
 
-  <p><strong>Threat:</strong> {{ r.threatName }}</p>
-  <p><strong>Classification:</strong> {{ r.classification }}</p>
-  <p *ngIf="r.forensicExpert1"><strong>Forensic expert 1:</strong> {{ r.forensicExpert1 }}</p>
-  <p *ngIf="r.forensicExpert2"><strong>Forensic expert 2:</strong> {{ r.forensicExpert2 }}</p>
+        <mat-form-field appearance="fill" class="full-width">
+          <mat-label>Threat name</mat-label>
+          <input matInput [(ngModel)]="formData.threatName"
+                name="threatName">
+        </mat-form-field>
 
-  <div [innerHTML]="r.snippet ? r.snippet : (r.behaviorDescription ? r.behaviorDescription : '')"></div>
+        <mat-form-field appearance="fill" class="full-width">
+          <mat-label>Forensic expert 1</mat-label>
+          <input matInput [(ngModel)]="formData.forensicExpert1"
+                name="forensicExpert1">
+        </mat-form-field>
 
-  <!-- Optional: score -->
-  <small *ngIf="r.score !== undefined">Score: {{ r.score | number:'1.2-2' }}</small>
+        <mat-form-field appearance="fill" class="full-width">
+          <mat-label>Forensic expert 2</mat-label>
+          <input matInput [(ngModel)]="formData.forensicExpert2"
+                name="forensicExpert2">
+        </mat-form-field>
 
-</div>
+        <mat-form-field appearance="fill" class="full-width">
+          <mat-label>Behavior description</mat-label>
+          <textarea matInput
+                    rows="4"
+                    [(ngModel)]="formData.behaviorDescription"
+                    name="behaviorDescription">
+          </textarea>
+        </mat-form-field>
 
-<div *ngIf="totalPages > 0" style="margin-top: 20px;">
+        <div class="button-row">
+          <button mat-stroked-button color="accent" type="button" (click)="confirm()">
+            Confirm
+          </button>
+          <button mat-stroked-button color="warn" type="button" (click)="cancel()">
+            Cancel
+          </button>
+        </div>
 
-  <button
-    (click)="changePage(currentPage - 1)"
-    [disabled]="currentPage === 0">
-    Previous
-  </button>
+      </form>
+    </div>
+  </div>
 
-  <span style="margin: 0 15px;">
-    Page {{ currentPage + 1 }} of {{ totalPages }}
-  </span>
+  <!-- SEARCH SECTION -->
+  <div class="card">
+    <h3>Search Reports</h3>
 
-  <button
-    (click)="changePage(currentPage + 1)"
-    [disabled]="currentPage + 1 >= totalPages">
-    Next
-  </button>
+    <div class="search-grid">
 
-</div>
+      <form (ngSubmit)="searchReports()" class="search-box">
+      <mat-form-field appearance="fill" class="search-field">
+        <mat-label>Boolean search (AND / OR / "")</mat-label>
+        <input matInput [(ngModel)]="searchQuery" name="searchQuery">
+      </mat-form-field>
+      <button mat-raised-button color="primary" type="submit">
+        <mat-icon>search</mat-icon>
+        Search
+      </button>
+      </form>
 
-<div *ngIf="searchResults.length === 0 && searchPerformed" style="margin-top: 30px;">
-  <p>No reports found.</p>
+      <form (ngSubmit)="basicSearch()" class="search-box">
+        <mat-form-field appearance="fill" class="search-field">
+          <mat-label>Expert / Hash / Classification</mat-label>
+          <input matInput [(ngModel)]="basicSearchInput" name="basicSearchInput">
+        </mat-form-field>
+      <button mat-raised-button color="primary" type="submit">
+        <mat-icon>search</mat-icon>
+        Search
+      </button>
+      </form>
+
+      <form (ngSubmit)="searchOrgThreat()" class="search-box">
+        
+      <mat-form-field appearance="fill" class="search-field">
+        <mat-label>Organization / Threat</mat-label>
+        <input matInput [(ngModel)]="orgThreatInput" name="orgThreatInput">
+      </mat-form-field>
+
+      <button mat-raised-button color="primary" type="submit">
+        <mat-icon>search</mat-icon>
+        Search
+      </button>
+      </form>
+
+      <form (ngSubmit)="searchBehavior()" class="search-box">
+      <mat-form-field appearance="fill" class="search-field">
+        <mat-label>Behavior description</mat-label>
+        <input matInput [(ngModel)]="behaviorInput" name="behaviorInput">
+      </mat-form-field>
+      <button mat-raised-button color="primary" type="submit">
+        <mat-icon>search</mat-icon>
+        Search
+      </button>
+      </form>
+
+      <form (ngSubmit)="searchKnn()" class="search-box">
+
+      <mat-form-field appearance="fill" class="search-field">
+        <mat-label>KNN search</mat-label>
+        <input matInput [(ngModel)]="knnInput" name="knnInput">
+      </mat-form-field>
+
+      <button mat-raised-button color="primary" type="submit">
+        <mat-icon>search</mat-icon>
+        Search
+      </button>
+      </form>
+
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div *ngIf="searchResults.length > 0" class="card">
+    <h3>Results</h3>
+
+    <div *ngFor="let r of searchResults" class="result-card">
+      <h4>{{ r.organizationName }}</h4>
+      <p><strong>Threat:</strong> {{ r.threatName }}</p>
+      <p><strong>Classification:</strong> {{ r.classification }}</p>
+
+      <div [innerHTML]="r.snippet ? r.snippet : r.behaviorDescription"></div>
+
+      <small *ngIf="r.score !== undefined">
+        Score: {{ r.score | number:'1.2-2' }}
+      </small>
+    </div>
+
+    <div class="pagination" *ngIf="totalPages > 1">
+      <button (click)="changePage(currentPage - 1)"
+              [disabled]="currentPage === 0">
+        Previous
+      </button>
+
+      <span>
+        Page {{ currentPage + 1 }} of {{ totalPages }}
+      </span>
+
+      <button (click)="changePage(currentPage + 1)"
+              [disabled]="currentPage + 1 >= totalPages">
+        Next
+      </button>
+    </div>
+  </div>
+
+  <div *ngIf="searchResults.length === 0 && searchPerformed"
+       class="card empty-state">
+    No reports found.
+  </div>
+
 </div>
