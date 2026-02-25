@@ -54,6 +54,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             } catch (Exception e) {
                 // token nije validan -> Authentication se ne postavlja
             }
+        } else {
+            // Nema tokena -> ako ruta nije permitAll, vrati 401
+            if (!request.getRequestURI().equals("/login")) { // dodatno proveri ostale permitAll rute
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                return;
+            }
         }
         filterChain.doFilter(request, response);
     }
