@@ -69,4 +69,13 @@ export class ReportService {
       { params: { input, page, size } }
     );
   }
+
+  searchByLocation(location: string, radiusKm: number, page: number, size: number)
+    : Observable<PageResponse<any>> {
+
+    return this.http.get<PageResponse<any>>(
+      `${this.apiUrl}/search/geo/location`,
+      { params: { location, radiusKm, page, size } }
+    );
+  }
 }

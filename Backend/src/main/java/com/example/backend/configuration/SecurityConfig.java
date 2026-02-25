@@ -47,7 +47,8 @@ public class SecurityConfig implements WebMvcConfigurer {
                                         "/api/reports/search-basic",
                                         "/api/reports/search-org-threat",
                                         "/api/reports/search/behavior",
-                                        "/api/reports/search/knn").permitAll()
+                                        "/api/reports/search/knn",
+                                        "/api/reports/search/geo/location").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(sess ->

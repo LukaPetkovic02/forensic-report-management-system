@@ -7,6 +7,8 @@ import com.example.backend.dto.SearchResultDTO;
 import com.example.backend.model.ForensicReport;
 import com.example.backend.model.ForensicReportDocument;
 import com.example.backend.service.ForensicReportService;
+import com.example.backend.service.GeoSearchService;
+import com.example.backend.service.GeocodingService;
 import com.example.backend.service.PdfParserService;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
@@ -26,6 +28,9 @@ public class ReportController {
 
     @Autowired
     private ForensicReportService forensicReportService;
+
+    @Autowired
+    private GeoSearchService geoSearchService;
 
     @PostMapping("/parse")
     public ResponseEntity<ForensicReportDTO> parseReport(@RequestParam("file") MultipartFile file){
@@ -82,5 +87,15 @@ public class ReportController {
                                                           @RequestParam(defaultValue = "0") int page,
                                                           @RequestParam(defaultValue = "10") int size) throws IOException, TranslateException {
         return forensicReportService.knnSearch(input, page, size);
+    }
+
+    @GetMapping("/search/geo/location")
+    public PageResponse<ForensicReportDocument> searchByLocation(
+            @RequestParam String location,
+            @RequestParam double radiusKm,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        return geoSearchService.searchWithinRadius(location, radiusKm, page, size);
     }
 }

@@ -37,7 +37,7 @@ export class HomeComponent{
       forensicExpert2: ''
     };
 
-    activeSearchType: 'basic' | 'boolean' | 'org' | 'behavior' | 'knn' | null = null;
+    activeSearchType: 'basic' | 'boolean' | 'org' | 'behavior' | 'knn' | 'geo' | null = null;
 
     currentPage = 0;
     pageSize = 10;
@@ -174,6 +174,37 @@ export class HomeComponent{
       });
     }
 
+    geoLocationInput: string = '';
+    geoRadiusKm: number = 5;
+
+    searchGeo(page: number = 0) {
+
+      if (!this.geoLocationInput.trim() || !this.geoRadiusKm) {
+        return;
+      }
+
+      this.activeSearchType = 'geo';
+      this.currentPage = page;
+
+      this.reportService
+        .searchByLocation(this.geoLocationInput, this.geoRadiusKm, this.currentPage, this.pageSize)
+        .subscribe({
+          next: (response) => {
+            this.searchResults = response.content;
+            this.totalPages = response.totalPages;
+            this.totalElements = response.totalElements;
+
+            this.searchPerformed = true;
+            this.cdr.markForCheck();
+          },
+          error: (err) => {
+            console.error(err);
+            alert("Error during geo search!");
+            this.searchPerformed = true;
+          }
+        });
+    }
+
     changePage(page: number) {
 
     if (page < 0 || page >= this.totalPages) return;
@@ -197,6 +228,10 @@ export class HomeComponent{
 
       case 'knn':
         this.searchKnn(page);
+        break;
+
+      case 'geo':
+        this.searchGeo(page);
         break;
     }
   }

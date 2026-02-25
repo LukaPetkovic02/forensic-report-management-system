@@ -7,6 +7,7 @@ import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.HighlightField;
 import co.elastic.clients.util.NamedValue;
 import com.example.backend.dto.ForensicReportDTO;
+import com.example.backend.dto.LocationDTO;
 import com.example.backend.dto.PageResponse;
 import com.example.backend.dto.SearchResultDTO;
 import com.example.backend.model.ForensicReport;
@@ -16,6 +17,7 @@ import com.example.backend.repository.ForensicReportRepository;
 import com.example.backend.util.VectorizationUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -34,6 +36,7 @@ public class ForensicReportService {
     private final ElasticsearchClient esClient;
     private final BooleanQueryParser booleanQueryParser;
     private final VectorizationUtil vectorizationUtil;
+    private final GeocodingService geocodingService;
 
     public ForensicReport saveFromPdf(MultipartFile file, ForensicReportDTO dto){
         if(file == null || file.isEmpty()){
@@ -53,6 +56,12 @@ public class ForensicReportService {
 
         ForensicReportDocument doc = mapToDocument(saved);
         doc.setId(saved.getId().toString());
+
+        GeoPoint geoPoint = geocodingService.getCoordinates(dto.getAddress());
+        doc.setLocation(LocationDTO.builder()
+                .lat(geoPoint.getLat())
+                .lon(geoPoint.getLon())
+                .build());
 
         elasticRepository.save(doc);
 

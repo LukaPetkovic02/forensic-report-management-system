@@ -1,5 +1,7 @@
 package com.example.backend.model;
 
+import com.example.backend.deserializer.GeoPointDeserializer;
+import com.example.backend.dto.LocationDTO;
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -10,6 +12,7 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.GeoPointField;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 @Document(indexName = "forensic_reports")
 @Data
@@ -46,7 +49,7 @@ public class ForensicReportDocument {
     private String reportText;
 
     @GeoPointField
-    private GeoPoint location;
+    private LocationDTO location;
 
     @Field(type = FieldType.Dense_Vector, dims = 384, similarity = "cosine")
     private float[] embedding;

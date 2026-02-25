@@ -184,6 +184,27 @@
       </button>
       </form>
 
+    <form (ngSubmit)="searchGeo()" class="search-box" style="display: flex; flex-direction: column; gap: 8px; max-width: 400px;">
+
+      <mat-form-field appearance="fill" class="search-field" >
+        <mat-label>Search by location</mat-label>
+        <input matInput [(ngModel)]="geoLocationInput" name="geoLocationInput">
+      </mat-form-field>
+
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <mat-form-field appearance="fill" class="search-field" style="flex: 1;">
+          <mat-label>Radius (km)</mat-label>
+          <input matInput [(ngModel)]="geoRadiusKm" name="geoRadiusKm" type="number">
+        </mat-form-field>
+
+        <button mat-raised-button color="primary" type="submit">
+          <mat-icon>search</mat-icon>
+          Search
+        </button>
+      </div>
+
+    </form>
+
     </div>
   </div>
 
