@@ -1,6 +1,5 @@
 package com.example.backend.model;
 
-import com.example.backend.deserializer.GeoPointDeserializer;
 import com.example.backend.dto.LocationDTO;
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
@@ -11,8 +10,6 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.GeoPointField;
-import org.springframework.data.elasticsearch.core.geo.GeoPoint;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 @Document(indexName = "forensic_reports")
 @Data
