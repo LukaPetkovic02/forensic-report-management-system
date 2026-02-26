@@ -82,13 +82,23 @@ public class PdfParserService {
     }
 
     private String extractBehavior(String text) {
+        String marker = "Opis ponašanja malvera/pretnje:";
+        int startIdx = text.indexOf(marker);
 
-        Pattern pattern = Pattern.compile(
-                "Opis ponašanja malvera/pretnje:\\s*(.*?)\\n\\s*.+?\\n\\s*_+",
-                Pattern.DOTALL
-        );
+        if (startIdx == -1) return null;
 
-        return matchGroup(pattern, text, 1);
+        startIdx += marker.length();
+
+        // Pronađi početak prvog eksperta
+        String expert1 = extractFirstExpert(text);
+        int endIdx = expert1 != null ?
+                text.indexOf(expert1, startIdx) :
+                text.length();
+
+        if (endIdx == -1) endIdx = text.length();
+
+        // Vrati samo deo između opisa i imena eksperta
+        return text.substring(startIdx, endIdx).trim();
     }
 
     private String extractFirstExpert(String text) {
