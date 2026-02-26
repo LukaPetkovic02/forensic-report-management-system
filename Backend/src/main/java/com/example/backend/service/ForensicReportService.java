@@ -65,6 +65,12 @@ public class ForensicReportService {
 
         elasticRepository.save(doc);
 
+        log.info("REPORT_UPLOADED | city={} | threat={} | expert1={} | expert2={}",
+                dto.getAddress().split(",")[2].trim(),
+                dto.getThreatName(),
+                dto.getForensicExpert1(),
+                dto.getForensicExpert2());
+
         return saved;
     }
 
